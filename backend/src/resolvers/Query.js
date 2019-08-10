@@ -1,3 +1,7 @@
-const Query = {};
+const Query = {
+  items(parent, args, ctx, info) {
+    return[]
+  }
+}
 
-module.exports = Query;
+module.exports = Query
