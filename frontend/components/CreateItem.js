@@ -42,12 +42,13 @@ class CreateItem extends Component {
 
   render() {
     return (
-      <Mutation query={CREATE_ITEM_MUTATION} variables={this.state}>
+      <Mutation mutation={CREATE_ITEM_MUTATION} variables={this.state}>
         {(createItem, { loading, error }) => (
           <Form
-            onSubmit={e => {
+            onSubmit={async e => {
               e.preventDefault()
-              console.log(this.state)
+              const res = await createItem()
+              console.log(res)
             }}>
             <Error error={error} />
             <fieldset disabled={loading} aria-busy={loading}>
