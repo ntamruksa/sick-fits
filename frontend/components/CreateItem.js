@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { Mutation } from 'react-apollo'
 import gql from 'graphql-tag'
+import Router from 'next/router'
 import Form from './styles/Form'
 import formatMoney from '../lib/formatMoney'
 import Error from './ErrorMessage'
@@ -49,6 +50,10 @@ class CreateItem extends Component {
               e.preventDefault()
               const res = await createItem()
               console.log(res)
+              Router.push({
+                pathname: '/item',
+                query: { id: res.data.createItem.id }
+              })
             }}>
             <Error error={error} />
             <fieldset disabled={loading} aria-busy={loading}>
@@ -65,7 +70,7 @@ class CreateItem extends Component {
                 />
               </label>
               <label htmlFor='price'>
-                Title
+                Price
                 <input
                   type='number'
                   id='price'
@@ -77,7 +82,7 @@ class CreateItem extends Component {
                 />
               </label>
               <label htmlFor='description'>
-                Title
+                Description
                 <textarea
                   id='description'
                   name='description'
