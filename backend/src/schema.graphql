@@ -8,7 +8,8 @@ type Query {
   item(where: ItemWhereUniqueInput!): Item
   itemsConnection(where: ItemWhereInput): ItemConnection!
   me: User
-  user: User
+  user(where: UserWhereUniqueInput!): User
+  users(where: UserWhereInput): [User]!
 }
 
 type Mutation {

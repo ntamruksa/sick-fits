@@ -98,7 +98,7 @@ const Mutations = {
     // 2. set a reset token and expiry on that user
     const randomBytesPromisified = promisify(randomBytes)
     const resetToken = (await randomBytesPromisified(20)).toString('hex')
-    const resetTokenExpiry = Date.now() + 3600
+    const resetTokenExpiry = Date.now() + 3600000 // 1 hour from now
     const res = ctx.db.mutation.updateUser({
       where: { email },
       data: { resetToken, resetTokenExpiry }
@@ -108,28 +108,44 @@ const Mutations = {
     // 3. email the reset token to user
   },
 
-  async resetPassword(parent, {resetToken, password, confirmPassword}, ctx, info){
+  async resetPassword(
+    parent,
+    { resetToken, password, confirmPassword },
+    ctx,
+    info
+  ) {
     // 1. check if password match
-    const passwordMatch = password===confirmPassword
+    const passwordMatch = password === confirmPassword
     if (!passwordMatch) {
       throw new Error('Password not match')
     }
     // 2. check if resetToken is legit
-    const users = await ctx.db.query.users({ where: {resetToken}}).toArray
-    if (!users) {
-      throw new Error('Invalid token')
-    }
     // 3. check if resetToken is expired
-    const tokenExpired = moment(users[0].resetTokenExpiry).isAfter(Date.now())
-    console.log(tokenExpired, moment(users[0].resetTokenExpiry))
-    if (tokenExpired) {
-      throw new Error('Token expired')
+    const [user] = await ctx.db.query.users({
+      where: {
+        resetToken,
+        resetTokenExpiry_gte: Date.now() - 3600000
+      }
+    })
+    if (!user) {
+      throw new Error('Invalid token or expired')
     }
     // 4. hash the new password
+    const bcryptPassword = await bcrypt.hash(password, 10)
     // 5. save new password and remove resetToken and resetTokenExpiry
+    const updatedUser = ctx.db.mutation.updateUser({
+      where: { email: user.email },
+      data: { resetToken: null, resetTokenExpiry: null, password: bcryptPassword }
+    })
     // 6. generate JWT
+    const token = jwt.sign({ userId: updatedUser.id }, process.env.APP_SECRET)
     // 7. set JWT cookie
+    ctx.response.cookie('token', token, {
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24 * 365,
+    })
     // 8. return new user
+    return updatedUser
   }
 }
 

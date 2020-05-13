@@ -11,7 +11,9 @@ const Query = {
     }
     return ctx.db.query.user({ where: { id: ctx.request.userId } }, info)
   },
-  user: forwardTo('db')
+  user: forwardTo('db'),
+  users: forwardTo('db'),
+
 }
 
 module.exports = Query
